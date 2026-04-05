@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aide à la recherche, prix du carburant — Gravelotte & environs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F0E8;
+    --card: #FFFFFF;
+    --primary: #1B4332;
+    --accent: #D4A030;
+    --text: #2D2D2D;
+    --text-light: #6B6B6B;
+    --border: #E0D8CC;
+    --best: #1B4332;
+    --best-bg: #E8F0EB;
+    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 28px 0 24px;
+  }
+  .header-icon {
+    font-size: 36px;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--primary);
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .header .subtitle {
+    font-size: 14px;
+    color: var(--text-light);
+  }
+  .header .data-source {
+    font-size: 11px;
+    color: var(--text-light);
+    margin-top: 6px;
+    opacity: 0.7;
+  }
+  .header .data-source a {
+    color: var(--text-light);
+  }
+
+  /* Controls */
+  .controls {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+  .control-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+
+  /* Fuel buttons */
+  .fuel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .fuel-btn {
+    background: var(--bg);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 12px 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .fuel-btn:hover { border-color: var(--accent); }
+  .fuel-btn.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  /* Radius slider */
+  .radius-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .radius-row input[type=range] {
+    flex: 1;
+    accent-color: var(--primary);
+    height: 6px;
+  }
+  .radius-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+    min-width: 56px;
+    text-align: right;
+  }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-light);
+    font-size: 16px;
+  }
+  .loading .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Error */
+  .error-msg {
+    text-align: center;
+    padding: 32px 20px;
+    color: #9B2C2C;
+    background: #FFF5F5;
+    border-radius: var(--radius);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* Results */
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+    padding: 0 4px;
+  }
+  .results-count {
+    font-size: 14px;
+    color: var(--text-light);
+  }
+  .results-date {
+    font-size: 12px;
+    color: var(--text-light);
+  }
+
+  /* Station card */
+  .station {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: transform 0.15s;
+    position: relative;
+  }
+  .station:hover { transform: translateY(-1px); }
+  .station.best {
+    background: var(--best-bg);
+    border: 2px solid var(--best);
+  }
+
+  .rank {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-light);
+    flex-shrink: 0;
+  }
+  .station.best .rank {
+    background: var(--best);
+    color: #fff;
+  }
+
+  .station-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .station-city {
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1.3;
+  }
+  .station-addr {
+    font-size: 13px;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .station-dist {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 2px;
+  }
+  .station-update {
+    font-size: 11px;
+    color: var(--text-light);
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+
+  .station-price {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--primary);
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .station-price .unit {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: var(--text-light);
+    display: block;
+    font-weight: 400;
+  }
+
+  .station-link {
+    display: block;
+    font-size: 12px;
+    color: var(--accent);
+    text-decoration: none;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+  .station-link:hover { text-decoration: underline; }
+
+  /* Badge meilleur prix */
+  .best-badge {
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* No results */
+  .no-results {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-light);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 24px 0 8px;
+    font-size: 11px;
+    color: var(--text-light);
+    opacity: 0.6;
+    line-height: 1.6;
+  }
+  .footer a { color: var(--text-light); }
+
+  /* Responsive */
+  @media (max-width: 400px) {
+    .fuel-grid { grid-template-columns: repeat(2, 1fr); }
+    .station-price { font-size: 22px; }
+    .station-city { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">⛽</div>
+    <h1>Aide à la recherche, prix du carburant</h1>
+    <div class="subtitle">autour de Gravelotte & environs</div>
+    <div class="data-source">Données officielles — <a href="https://www.prix-carburants.gouv.fr" target="_blank">prix-carburants.gouv.fr</a></div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="control-label">Type de carburant</div>
+    <div class="fuel-grid" id="fuelGrid"></div>
+
+    <div class="control-label">Rayon de recherche</div>
+    <div class="radius-row">
+      <input type="range" id="radiusSlider" min="5" max="30" value="15" step="1">
+      <div class="radius-value" id="radiusValue">15 km</div>
+    </div>
+  </div>
+
+  <!-- Results container -->
+  <div id="results"></div>
+
+  <!-- Footer -->
+  <div class="footer">
+    Données mises à jour en temps réel par le Ministère de l'Économie<br>
+    <a href="https://www.prix-carburants.gouv.fr" target="_blank">prix-carburants.gouv.fr</a><br><br>
+    <em>Outil expérimental, basé sur des données réactualisées journalièrement par le ministère de l'Économie. Des erreurs et écarts peuvent exister dans les données présentées.</em>
+  </div>
+</div>
+
+<script>
+(function() {
+  // Configuration
+  const CENTER_LAT = 49.1028;
+  const CENTER_LNG = 6.0458;
+  const VILLAGE_NAME = 'Gravelotte';
+
+  const FUELS = [
+    { key: 'gazole', label: 'Gazole', prixField: 'gazole_prix', majField: 'gazole_maj' },
+    { key: 'sp95', label: 'SP95 E5', prixField: 'sp95_prix', majField: 'sp95_maj' },
+    { key: 'e10', label: 'SP95 E10', prixField: 'e10_prix', majField: 'e10_maj' },
+    { key: 'sp98', label: 'SP98', prixField: 'sp98_prix', majField: 'sp98_maj' },
+    { key: 'e85', label: 'E85', prixField: 'e85_prix', majField: 'e85_maj' },
+    { key: 'gplc', label: 'GPLc', prixField: 'gplc_prix', majField: 'gplc_maj' },
+  ];
+
+  let selectedFuel = FUELS[0]; // Gazole par défaut
+  let radius = 15;
+  let abortController = null;
+
+  // DOM
+  const fuelGrid = document.getElementById('fuelGrid');
+  const radiusSlider = document.getElementById('radiusSlider');
+  const radiusValue = document.getElementById('radiusValue');
+  const resultsDiv = document.getElementById('results');
+
+  // Init fuel buttons
+  FUELS.forEach((f, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'fuel-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = f.label;
+    btn.dataset.index = i;
+    btn.addEventListener('click', () => {
+      selectedFuel = FUELS[i];
+      document.querySelectorAll('.fuel-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      fetchData();
+    });
+    fuelGrid.appendChild(btn);
+  });
+
+  // Radius slider
+  radiusSlider.addEventListener('input', () => {
+    radius = parseInt(radiusSlider.value);
+    radiusValue.textContent = radius + ' km';
+  });
+  // Debounced fetch on change
+  let radiusTimer;
+  radiusSlider.addEventListener('input', () => {
+    clearTimeout(radiusTimer);
+    radiusTimer = setTimeout(fetchData, 400);
+  });
+
+  // Haversine distance
+  function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  // Format date
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      const now = new Date();
+      const diffH = Math.round((now - d) / 3600000);
+      if (diffH < 1) return "il y a moins d'1h";
+      if (diffH < 24) return 'il y a ' + diffH + 'h';
+      const diffD = Math.round(diffH / 24);
+      if (diffD === 1) return 'hier';
+      if (diffD < 7) return 'il y a ' + diffD + ' jours';
+      return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    } catch(e) { return ''; }
+  }
+
+  // Fetch data
+  async function fetchData() {
+    if (abortController) abortController.abort();
+    abortController = new AbortController();
+
+    resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Recherche des stations...</div>';
+
+    const prixField = selectedFuel.prixField;
+    const majField = selectedFuel.majField;
+
+    // API Opendatasoft — data.economie.gouv.fr
+    const where = `within_distance(geom, geom'POINT(${CENTER_LNG} ${CENTER_LAT})', ${radius}km) AND ${prixField} IS NOT NULL`;
+    const select = `id,adresse,ville,cp,geom,${prixField},${majField}`;
+    const orderBy = `${prixField} ASC`;
+    const url = `https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/prix-des-carburants-en-france-flux-instantane-v2/records?where=${encodeURIComponent(where)}&select=${encodeURIComponent(select)}&order_by=${encodeURIComponent(orderBy)}&limit=30`;
+
+    try {
+      const resp = await fetch(url, { signal: abortController.signal });
+      if (!resp.ok) throw new Error('Erreur API: ' + resp.status);
+      const data = await resp.json();
+
+      if (!data.results || data.results.length === 0) {
+        resultsDiv.innerHTML = '<div class="no-results">Aucune station ne propose ce carburant dans un rayon de ' + radius + ' km.<br>Essayez d\'augmenter le rayon de recherche.</div>';
+        return;
+      }
+
+      renderResults(data.results, data.total_count);
+    } catch(e) {
+      if (e.name === 'AbortError') return;
+      console.error(e);
+      resultsDiv.innerHTML = '<div class="error-msg">Impossible de charger les données.<br>Vérifiez votre connexion internet et réessayez.</div>';
+    }
+  }
+
+  // Render
+  function renderResults(records, totalCount) {
+    const prixField = selectedFuel.prixField;
+    const majField = selectedFuel.majField;
+
+    let html = '<div class="results-header">';
+    html += '<div class="results-count">' + Math.min(records.length, 30) + ' station' + (records.length > 1 ? 's' : '') + ' trouvée' + (records.length > 1 ? 's' : '') + '</div>';
+    html += '</div>';
+
+    records.forEach((r, i) => {
+      const prix = r[prixField];
+      const maj = r[majField];
+      const ville = r.ville || '';
+      const adresse = r.adresse || '';
+      const cp = r.cp || '';
+      const isBest = i === 0;
+
+      // Calculate distance
+      let distKm = null;
+      if (r.geom && r.geom.lat && r.geom.lon) {
+        distKm = haversine(CENTER_LAT, CENTER_LNG, r.geom.lat, r.geom.lon);
+      }
+
+      // Google Maps link — coordonnées GPS issues des données prix-carburants
+      let mapsUrl = '';
+      if (r.geom && r.geom.lat && r.geom.lon) {
+        mapsUrl = `https://www.google.com/maps/dir/Gravelotte/${r.geom.lat},${r.geom.lon}`;
+      }
+
+      html += '<div class="station' + (isBest ? ' best' : '') + '">';
+      if (isBest) html += '<div class="best-badge">Meilleur prix</div>';
+      html += '<div class="rank">' + (i + 1) + '</div>';
+      html += '<div class="station-info">';
+      html += '<div class="station-city">' + escapeHtml(ville) + ' <span style="font-weight:400;color:var(--text-light);font-size:13px">' + escapeHtml(cp) + '</span></div>';
+      html += '<div class="station-addr">' + escapeHtml(adresse) + '</div>';
+      if (distKm !== null) {
+        html += '<div class="station-dist">à ' + distKm.toFixed(1) + ' km de ' + VILLAGE_NAME + '</div>';
+      }
+      if (maj) {
+        html += '<div class="station-update">Mis à jour ' + formatDate(maj) + '</div>';
+      }
+      if (mapsUrl) {
+        html += '<a class="station-link" href="' + mapsUrl + '" target="_blank" rel="noopener">📍 Itinéraire</a>';
+      }
+      html += '</div>';
+      html += '<div class="station-price">' + (prix ? prix.toFixed(3) + '€' : '—') + '<span class="unit">/litre</span></div>';
+      html += '</div>';
+    });
+
+    resultsDiv.innerHTML = html;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // Init
+  fetchData();
+})();
+</script>
+
+</body>
+</html>
